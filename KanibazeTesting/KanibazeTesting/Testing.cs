@@ -1,10 +1,13 @@
 using RestSharp;
 using Newtonsoft.Json.Linq;
+using System.Net;
+using System.Text.Json.Nodes;
 
 namespace KanbanizeTesting
 {
     public class Testing
     {
+        private Dictionary<string, string> tempDictionary;
         private RestClient client;
         private RestRequest request;
         private const string _apikey = "A0MfKhN4c8wyBzOidaSTEW9Ba8tiyiRfyZHT6EYW";
@@ -13,6 +16,7 @@ namespace KanbanizeTesting
         [SetUp]
         public void Setup()
         {
+            tempDictionary = new Dictionary<string, string>();//savetes
             client = new RestClient("https://maplemediaeood.kanbanize.com/api/v2/cards");
             client.AddDefaultHeader("apikey", _apikey);
         }
@@ -23,20 +27,25 @@ namespace KanbanizeTesting
             client.Dispose();
         }
 
-        [Test]
-        public void Test_Card_CanBeCreated_ValidData()
+        [Test, Order(0)]
+        public void Validate_CardCreation_Successful()
         {
             request = new RestRequest();
             var payload = new JObject
             {
                 { "title", "testest" },
-                { "column_id", "22" },
+                { "column_id", "22" },//i've created test workspace and got 
                 { "lane_id", 5 },
-                { "position", 5 },
-                { "priority", 250 }
+                { "position", 2 },
+                { "priority", 250 },
+                { "color", "050505" }
             };
             request.AddStringBody(payload.ToString(), DataFormat.Json);
             var result = client.ExecutePost(request);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var resultContent = JObject.Parse(result.Content);
+            var createdCardId = resultContent["card_id"];
         }
     }
 }
